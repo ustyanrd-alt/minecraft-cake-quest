@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Квест: скрафть торт (Minecraft)</title>
+<style>
+  :root{
+    /* Подогнать под фон: размер области с сеткой (включая место под output) */
+    --grid-size: 460px;        /* ширина квадрата, на котором рисована 3x3 сетка */
+    --output-gap: 120px;       /* ширина области справа для output (подогнать, если нужно) */
+    --gap: 8px;                /* расстояние между клетками */
+    --cell-size: calc((var(--grid-size) - (var(--gap) * 2)) / 3);
+    --item-size: 72px;         /* размер иконок в инвентаре */
+    --page-bg: #071025;
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    background: linear-gradient(180deg, var(--page-bg), #021018);
+    color:#eef6ff;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+    padding:18px;
+    display:flex;
+    justify-content:center;
+  }
+
+  .wrap{ width:100%; max-width:1000px; }
+
+  h1{ font-size:20px; margin:0 0 12px; text-align:center; }
+
+  .stage{
+    display:flex;
+    gap:18px;
+    align-items:flex-start;
+    justify-content:center;
+    flex-wrap:wrap;
+  }
+
+  /* Обёртка фонового изображения — здесь будет фон + сетка + output */
+  .bg-wrapper{
+    position:relative;
+    width: calc(var(--grid-size) + var(--output-gap));
+    max-width:96vw;
+    height: calc(var(--grid-size) * 0.95 + 40px); /* чуть гибкий по высоте */
+    border-radius:12px;
+    overflow:visible;
+    margin:0 auto;
+  }
+
+  /* Фон (grid-bg.png) покрывает всю обёртку */
+  .bg {
+    position:absolute; inset:0;
+    background-image: url('grid-bg.png');
+    background-size: cover;
+    background-position: center;
+    filter: none;
+    border-radius:12px;
+    box-shadow: 0 8px 28px rgba(0,0,0,0.6);
+  }
+
+  /* Сетка (3x3) — точно размером var(--grid-size) и выровнена по левому краю */
+  .grid {
+    position:absolute;
+    left:8px; top:8px;
+    width: var(--grid-size);
+    height: var(--grid-size);
+    display:grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: var(--gap);
+    padding:8px;
+    pointer-events:auto;
+  }
+
+  .cell{
+    background: rgba(255,255,255,0.03);
+    border-radius:8px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+    user-select:none;
+    -webkit-tap-highlight-color: transparent;
+    position:relative;
+  }
+  .cell img.placed{
+    width:86%;
+    height:86%;
+    object-fit:contain;
+    pointer-events:none;
+  }
+
+  /* Output slot: справа от сетки, в той же обёртке */
+  .output {
+    position:absolute;
+    left: calc(var(--grid-size) + ((var(--output-gap) - var(--cell-size)) / 2) + 8px);
+    top: calc(50% - var(--cell-size) / 2);
+    width: var(--cell-size);
+    height: var(--cell-size);
+    border-radius:8px;
+    background: rgba(255,255,255,0.02);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+  }
+  .output img{ width:92%; height:92%; object-fit:contain; pointer-events:none; }
+
+  /* Результат справа (коробочка с текстом) — на мобильных подбирается ниже */
+  .panel{
+    width:220px;
+    min-width:160px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border-radius:10px;
+    padding:12px;
+    color:#dff0ff;
+    box-shadow:0 6px 18px rgba(0,0,0,0.45);
+    font-size:14px;
+  }
+  .panel h3{ margin:0 0 8px; font-size:16px; }
+  .panel .hint{ font-size:13px; color:#cfe3ff; margin-top:8px; }
+
+  /* Инвентарь — внизу, под фоном, горизонтальная полоса */
+  .inventory {
+    margin-top:12px;
+    width: calc(var(--grid-size));
+    max-width:96vw;
+    display:flex;
+    gap:10px;
+    padding:8px;
+    background: rgba(0,0,0,0.18);
+    border-radius:10px;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    align-items:center;
+    justify-content:flex-start;
+    margin-left: 8px; /* выровнять под сеткой по левому краю */
+  }
+  .inv-item{
+    min-width: var(--item-size);
+min-height: var(--item-size);
+    width: var(--item-size);
+    height: var(--item-size);
+    border-radius:8px;
+    background: rgba(255,255,255,0.03);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.45);
+    cursor:grab;
+    user-select:none;
+    -webkit-user-drag: none;
+  }
+  .inv-item img{ width:78%; height:78%; object-fit:contain; pointer-events:none; display:block;}
+  .inv-item.selected{ outline:3px solid rgba(59,130,246,0.85); transform:translateY(-4px); }
+
+  /* Ghost */
+  .ghost{
+    position:fixed;
+    width:88px;
+    height:88px;
+    transform:translate(-50%,-50%);
+    z-index:9999;
+    pointer-events:none;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .ghost img{ width:100%; height:100%; object-fit:contain; }
+
+  /* Адаптив */
+  @media (max-width:860px){
+    .stage{ flex-direction:column; align-items:center; gap:12px; }
+    .panel{ width:92%; max-width:480px; }
+    .bg-wrapper{ width:92vw; height:auto; }
+    .grid{ left:8px; top:8px; width:92vw; height:92vw; } /* временно растягивает под экран */
+    .inventory{ width:92vw; margin-left:8px; }
+    .output{ left: calc(50% + (var(--grid-size)/2)); } /* fallback */
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Квест: скрафть торт</h1>
+    <div class="stage">
+      <div>
+        <div class="bg-wrapper" id="bgWrapper">
+          <div class="bg" aria-hidden="true"></div>
+
+          <div class="grid" id="grid" role="application" aria-label="Сетка крафта">
+            <!-- 9 ячеек -->
+            <div class="cell" data-index="0"></div>
+            <div class="cell" data-index="1"></div>
+            <div class="cell" data-index="2"></div>
+            <div class="cell" data-index="3"></div>
+            <div class="cell" data-index="4"></div>
+            <div class="cell" data-index="5"></div>
+            <div class="cell" data-index="6"></div>
+            <div class="cell" data-index="7"></div>
+            <div class="cell" data-index="8"></div>
+          </div>
+
+          <div class="output" id="output" aria-label="Результат (выход)"></div>
+        </div>
+
+        <div class="inventory" id="inventory" aria-label="Инвентарь">
+          <div class="inv-item" data-type="milk"><img src="milk.png" alt="milk"></div>
+          <div class="inv-item" data-type="sugar"><img src="sugar.png" alt="sugar"></div>
+          <div class="inv-item" data-type="egg"><img src="egg.png" alt="egg"></div>
+          <div class="inv-item" data-type="wheat"><img src="wheat.png" alt="wheat"></div>
+        </div>
+      </div>
+
+      <div class="panel" id="panel">
+        <h3>Результат</h3>
+        <div id="resultPreview" style="height:110px; display:flex; align-items:center; justify-content:center;">
+          <!-- тут будет отображён торт при успешном крафте -->
+        </div>
+        <div class="hint" id="hint">Соберите: верх — milk×3; среда — sugar, egg, sugar; низ — wheat×3</div>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* Карта типов -> файлы (в корне репо) */
+const IMAGE = {
+  milk: 'milk.png',
+  sugar: 'sugar.png',
+  egg: 'egg.png',
+  wheat: 'wheat.png',
+  cake: 'cake.png'
+};
+/* правильный рецепт (по позициям 0..8) */
+const RECIPE = ['milk','milk','milk','sugar','egg','sugar','wheat','wheat','wheat'];
+
+const inv = document.getElementById('inventory');
+const invItems = Array.from(document.querySelectorAll('.inv-item'));
+const cells = Array.from(document.querySelectorAll('.cell'));
+const output = document.getElementById('output');
+const resultPreview = document.getElementById('resultPreview');
+const hint = document.getElementById('hint');
+
+let selectedType = null;    // если выбрали тапом
+let ghost = null;           // ghost при перетаскивании
+let moveHandler = null;
+
+/* Поместить тип в клетку (заменить содержимое) */
+function placeInCell(idx, type){
+  const cell = cells[idx];
+  cell.innerHTML = '';
+  if(!type) {
+    cell.removeAttribute('data-type');
+    checkRecipe();
+    return;
+  }
+  const img = document.createElement('img');
+  img.className = 'placed';
+  img.src = IMAGE[type];
+  img.
+alt = type;
+  img.draggable = false;
+  img.dataset.type = type;
+  cell.appendChild(img);
+  cell.setAttribute('data-type', type);
+  checkRecipe();
+}
+
+/* Очистить селекцию */
+function clearSelection(){
+  selectedType = null;
+  invItems.forEach(el => el.classList.remove('selected'));
+}
+
+/* Нажатие на предмет = выбор для тап-постановки */
+invItems.forEach(el=>{
+  const type = el.dataset.type;
+  el.addEventListener('click', (e)=>{
+    // переключатель выбора
+    if(selectedType === type){ clearSelection(); return; }
+    selectedType = type;
+    invItems.forEach(x => x.classList.toggle('selected', x === el));
+  });
+
+  /* pointer drag */
+  el.addEventListener('pointerdown', (e)=>{
+    e.preventDefault();
+    clearSelection();
+    startDrag(e, type);
+  }, {passive:false});
+});
+
+/* Клик по клетке:
+   - если есть выбранный предмет (selectedType) — ставим туда;
+   - иначе если клетка занята — очищаем её.
+*/
+cells.forEach((cell, idx)=>{
+  cell.addEventListener('click', (e)=>{
+    if(selectedType){
+      placeInCell(idx, selectedType);
+      clearSelection();
+      return;
+    }
+    // если тапнули по заполненной — удалить
+    const cur = cell.getAttribute('data-type');
+    if(cur){
+      placeInCell(idx, null);
+    }
+  });
+});
+
+/* Функции drag */
+function startDrag(e, type){
+  // Создаём ghost
+  ghost = document.createElement('div');
+  ghost.className = 'ghost';
+  const img = document.createElement('img');
+  img.src = IMAGE[type];
+  img.alt = type;
+  ghost.appendChild(img);
+  document.body.appendChild(ghost);
+  moveGhost(e.clientX, e.clientY);
+
+  moveHandler = (ev) => {
+    moveGhost(ev.clientX, ev.clientY);
+  };
+  document.addEventListener('pointermove', moveHandler, {passive:true});
+
+  const onUp = (ev) => {
+    document.removeEventListener('pointermove', moveHandler);
+    document.removeEventListener('pointerup', onUp);
+    // Найдём элемент под указателем (ghost не препятствует)
+    const el = document.elementFromPoint(ev.clientX, ev.clientY);
+    const cell = el ? el.closest('.cell') : null;
+    if(cell){
+      const idx = Number(cell.dataset.index);
+      placeInCell(idx, type);
+    }
+    if(ghost && ghost.parentNode) ghost.remove();
+    ghost = null;
+  };
+  document.addEventListener('pointerup', onUp);
+}
+
+function moveGhost(x,y){
+  if(!ghost) return;
+  ghost.style.left = x + 'px';
+  ghost.style.top = y + 'px';
+}
+
+/* Проверка рецепта */
+function checkRecipe(){
+  const cur = cells.map(c => c.getAttribute('data-type') || null);
+  // если есть пустые — убираем output
+  if(cur.some(v => v === null)){
+    output.innerHTML = '';
+    resultPreview.innerHTML = '';
+    hint.textContent = 'Соберите: верх — milk×3; середина — sugar, egg, sugar; низ — wheat×3';
+    return false;
+  }
+  const ok = RECIPE.every((t,i) => cur[i] === t);
+  if(ok){
+    // показать торт в output и в панели
+    output.innerHTML = '';
+    const img = document.createElement('img');
+    img.src = IMAGE.cake;
+    img.alt = 'cake';
+    output.appendChild(img);
+
+    resultPreview.innerHTML = '';
+    const rimg = document.createElement('img');
+    rimg.src = IMAGE.cake;
+    rimg.alt = 'cake';
+    rimg.style.width = '88%';
+    rimg.style.height = '88%';
+    rimg.style.objectFit = 'contain';
+    resultPreview.appendChild(rimg);
+
+    hint.textContent = 'Ура! Торт готов — напиши в директ подсказка 2.';
+    return true;
+  } else {
+    output.innerHTML = '';
+    resultPreview.innerHTML = '';
+    hint.textContent = 'Ещё не тот расклад — пробуй снова!';
+    return false;
+  }
+}
+
+/* Загрузить изображение в output при старте, если уже есть (нет) */
+window.addEventListener('load', () => {
+  clearSelection();
+  checkRecipe();
+});
+
+/* Подсказка для тебя: если фон и сетка не совпадают, открой style -> :root и изменяй:
+   --grid-size (увеличить/уменьшить),
+   --output-gap (сместить output вправо/влево).
+   После правки — Commit и обнови страницу на телефоне. */
+</script>
+</body>
+</html>
