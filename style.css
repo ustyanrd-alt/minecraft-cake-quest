@@ -1,0 +1,74 @@
+body {
+  background: #1e1e2e;
+  color: white;
+  font-family: Arial, sans-serif;
+  text-align: center;
+  margin: 0;
+  padding: 20px;
+}
+
+.crafting-area {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  aspect-ratio: 2 / 1; /* сохраняет пропорции */
+  background: url("crafting-table.png") no-repeat center;
+  background-size: contain;
+  margin: 0 auto 20px;
+}
+
+/* сетка 3×3 */
+.slots {
+  position: absolute;
+  top: 15%;
+  left: 10%;
+  width: 45%;
+  height: 70%;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 2px;
+}
+
+.slot, .result-slot {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.slot img, .result-slot img {
+  max-width: 90%;
+  max-height: 90%;
+  pointer-events: none;
+}
+
+/* правая ячейка результата */
+.result-slot {
+  position: absolute;
+  top: 35%;
+  right: 10%;
+  width: 20%;
+  height: 30%;
+}
+
+/* инвентарь снизу */
+.inventory {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.inventory img {
+  width: 60px;
+  height: 60px;
+  cursor: grab;
+}
+
+.message {
+  margin-top: 20px;
+  padding: 15px;
+  border-radius: 10px;
+  background: rgba(0,0,0,0.6);
+  display: none;
+}
