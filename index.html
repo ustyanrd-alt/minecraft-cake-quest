@@ -11,56 +11,58 @@
       font-family: Arial, sans-serif;
       text-align: center;
       margin: 0;
-      padding: 20px;
+      padding: 10px;
     }
 
     h1 { margin-bottom: 15px; }
 
+    /* фон верстака */
     .crafting-area {
       position: relative;
       width: 95vw;
-      max-width: 400px;
-      aspect-ratio: 2 / 1;
-      background: url("crafting-table.png") no-repeat center;
+      max-width: 500px;
+      aspect-ratio: 1.6 / 1; /* чтобы картинка не растягивалась */
+      background: url("grid-bg.png") no-repeat center;
       background-size: contain;
       margin: 0 auto 20px;
     }
 
-    /* сетка 3×3 */
+    /* слоты (ячейки) */
     .slot {
       position: absolute;
-      width: 20%;
-      height: 22%;
+      width: 18%;
+      height: 20%;
       display: flex;
       align-items: center;
       justify-content: center;
     }
 
-    /* расположение 3×3 ячеек вручную */
-    .slot[data-index="0"] { top: 10%; left: 8%; }
-    .slot[data-index="1"] { top: 10%; left: 38%; }
-    .slot[data-index="2"] { top: 10%; left: 68%; }
+    /* позиции 3×3 */
+    .slot[data-index="0"] { top: 18%; left: 13%; }
+    .slot[data-index="1"] { top: 18%; left: 41%; }
+    .slot[data-index="2"] { top: 18%; left: 69%; }
 
-    .slot[data-index="3"] { top: 40%; left: 8%; }
-    .slot[data-index="4"] { top: 40%; left: 38%; }
-    .slot[data-index="5"] { top: 40%; left: 68%; }
+    .slot[data-index="3"] { top: 44%; left: 13%; }
+    .slot[data-index="4"] { top: 44%; left: 41%; }
+    .slot[data-index="5"] { top: 44%; left: 69%; }
 
-    .slot[data-index="6"] { top: 70%; left: 8%; }
-    .slot[data-index="7"] { top: 70%; left: 38%; }
-    .slot[data-index="8"] { top: 70%; left: 68%; }
+    .slot[data-index="6"] { top: 70%; left: 13%; }
+    .slot[data-index="7"] { top: 70%; left: 41%; }
+    .slot[data-index="8"] { top: 70%; left: 69%; }
 
     /* ячейка результата справа */
     .result-slot {
       position: absolute;
-      top: 40%;
-      right: 8%;
-      width: 20%;
-      height: 22%;
+      top: 44%;
+      right: 10%;
+      width: 18%;
+      height: 20%;
       display: flex;
       align-items: center;
       justify-content: center;
     }
 
+    /* картинки предметов в слотах */
     .slot img, .result-slot img {
       max-width: 90%;
       max-height: 90%;
@@ -81,6 +83,7 @@
       cursor: grab;
     }
 
+    /* сообщение после крафта */
     .message {
       margin-top: 20px;
       padding: 15px;
@@ -94,7 +97,7 @@
   <h1>Квест: скрафть торт</h1>
 
   <div class="crafting-area">
-    <!-- 3×3 ячейки -->
+    <!-- 3×3 слоты -->
     <div class="slot" data-index="0"></div>
     <div class="slot" data-index="1"></div>
     <div class="slot" data-index="2"></div>
@@ -117,7 +120,7 @@
     <img src="wheat.png" draggable="true" class="item" data-item="wheat">
   </div>
 
-  <!-- подсказка -->
+  <!-- сообщение -->
   <div class="message"></div>
 
   <script>
@@ -149,22 +152,20 @@
 
     function checkRecipe() {
       const correct = [
-        "milk","milk","milk",
+"milk","milk","milk",
         "sugar","egg","sugar",
         "wheat","wheat","wheat"
       ];
 
-      if (JSON.
-stringify(placedItems) === JSON.stringify(correct)) {
+      if (JSON.stringify(placedItems) === JSON.stringify(correct)) {
         resultSlot.innerHTML = <img src="cake.png" alt="cake">;
         message.style.display = "block";
         message.innerHTML = `
-          ✅ Ура! Ты скрафтила торт! <br>
-          🎉 Подсказка: следующая тайна ждёт тебя под столом!
+          🎉 Ура! Твой торт на день рождения готов!<br>
+          ✉️ Напиши в директ <b>подсказка 2</b>, чтобы получить следующее задание.
         `;
       }
     }
   </script>
 </body>
 </html>
-
