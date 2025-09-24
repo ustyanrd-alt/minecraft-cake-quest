@@ -4,150 +4,40 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Квест: скрафть торт</title>
-  <style>
-    body {
-      margin: 0;
-      background: #1e1e2e;
-      color: white;
-      font-family: Arial, sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      min-height: 100vh;
-    }
-
-    h1 {
-      margin: 15px;
-      text-align: center;
-    }
-
-    .crafting-area {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin: 10px;
-    }
-
-    .grid {
-      width: 300px;
-      height: 300px;
-      background: url("grid-bg.png") no-repeat center center;
-      background-size: contain;
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      grid-template-rows: repeat(3, 1fr);
-      gap: 2px;
-    }
-
-    .slot {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .slot img {
-      max-width: 80%;
-      max-height: 80%;
-      pointer-events: none;
-    }
-
-    .inventory {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      margin-top: 20px;
-      flex-wrap: wrap;
-    }
-
-    .item {
-      width: 64px;
-      height: 64px;
-    }
-
-    .result {
-      margin-top: 20px;
-      padding: 10px;
-      background: rgba(255,255,255,0.1);
-      border-radius: 5px;
-      text-align: center;
-      max-width: 300px;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <h1>Квест: скрафть торт</h1>
 
   <div class="crafting-area">
-    <div class="grid" id="grid">
-      <div class="slot" data-pos="0"></div>
-      <div class="slot" data-pos="1"></div>
-      <div class="slot" data-pos="2"></div>
-      <div class="slot" data-pos="3"></div>
-      <div class="slot" data-pos="4"></div>
-      <div class="slot" data-pos="5"></div>
-      <div class="slot" data-pos="6"></div>
-      <div class="slot" data-pos="7"></div>
-      <div class="slot" data-pos="8"></div>
+    <!-- 3×3 сетка -->
+    <div class="slots">
+      <div class="slot" data-index="0"></div>
+      <div class="slot" data-index="1"></div>
+      <div class="slot" data-index="2"></div>
+      <div class="slot" data-index="3"></div>
+      <div class="slot" data-index="4"></div>
+      <div class="slot" data-index="5"></div>
+      <div class="slot" data-index="6"></div>
+      <div class="slot" data-index="7"></div>
+      <div class="slot" data-index="8"></div>
     </div>
+
+    <!-- Ячейка результата -->
+    <div class="result-slot"></div>
   </div>
 
+  <!-- Инвентарь снизу -->
   <div class="inventory">
-    <img src="milk.png" alt="milk" class="item" draggable="true">
-    <img src="sugar.png" alt="sugar" class="item" draggable="true">
-    <img src="egg.png" alt="egg" class="item" draggable="true">
-    <img src="wheat.png" alt="wheat" class="item" draggable="true">
+    <img src="milk.png" draggable="true" class="item" data-item="milk">
+    <img src="sugar.png" draggable="true" class="item" data-item="sugar">
+    <img src="egg.png" draggable="true" class="item" data-item="egg">
+    <img src="wheat.png" draggable="true" class="item" data-item="wheat">
   </div>
 
-  <div class="result" id="result">
-    Перетащи предметы в сетку по рецепту!
-  </div>
+  <!-- Сообщение -->
+  <div class="message"></div>
 
-  <script>
-    const slots = document.querySelectorAll(".slot");
-    const items = document.querySelectorAll(".item");
-    const result = document.getElementById("result");
-
-    let draggedItem = null;
-
-    items.forEach(item => {
-      item.addEventListener("dragstart", () => {
-        draggedItem = item.cloneNode(true);
-      });
-    });
-
-    slots.forEach(slot => {
-      slot.addEventListener("dragover", e => e.preventDefault());
-      slot.addEventListener("drop", e => {
-        e.preventDefault();
-        slot.innerHTML = "";
-        slot.appendChild(draggedItem);
-        checkRecipe();
-      });
-    });
-
-    function checkRecipe() {
-      const layout = Array.from(slots).map(slot => {
-        if (slot.children.length > 0) {
-          return slot.children[0].alt;
-        }
-        return null;
-      });
-
-      const correct = [
-        "milk", "milk", "milk",
-        "sugar", "egg", "sugar",
-        "wheat", "wheat", "wheat"
-      ];
-
-      if (JSON.stringify(layout) === JSON.stringify(correct)) {
-        result.innerHTML = `
-          ✅ Ура! Ты скрафтила торт! <br>
-          <img src="cake.png" alt="cake" style="width:64px;height:64px;margin:10px;"><br>
-          🎉 Подсказка: следующая тайна ждёт тебя под столом!
-        `;
-      }
-    }
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>
