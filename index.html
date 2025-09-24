@@ -4,30 +4,112 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Квест: скрафть торт</title>
-  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      background: #1e1e2e;
+      color: white;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 { margin-bottom: 15px; }
+
+    .crafting-area {
+      position: relative;
+      width: 95vw;
+      max-width: 400px;
+      aspect-ratio: 2 / 1;
+      background: url("crafting-table.png") no-repeat center;
+      background-size: contain;
+      margin: 0 auto 20px;
+    }
+
+    /* сетка 3×3 */
+    .slot {
+      position: absolute;
+      width: 20%;
+      height: 22%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* расположение 3×3 ячеек вручную */
+    .slot[data-index="0"] { top: 10%; left: 8%; }
+    .slot[data-index="1"] { top: 10%; left: 38%; }
+    .slot[data-index="2"] { top: 10%; left: 68%; }
+
+    .slot[data-index="3"] { top: 40%; left: 8%; }
+    .slot[data-index="4"] { top: 40%; left: 38%; }
+    .slot[data-index="5"] { top: 40%; left: 68%; }
+
+    .slot[data-index="6"] { top: 70%; left: 8%; }
+    .slot[data-index="7"] { top: 70%; left: 38%; }
+    .slot[data-index="8"] { top: 70%; left: 68%; }
+
+    /* ячейка результата справа */
+    .result-slot {
+      position: absolute;
+      top: 40%;
+      right: 8%;
+      width: 20%;
+      height: 22%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .slot img, .result-slot img {
+      max-width: 90%;
+      max-height: 90%;
+      pointer-events: none;
+    }
+
+    /* инвентарь снизу */
+    .inventory {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .inventory img {
+      width: 60px;
+      height: 60px;
+      cursor: grab;
+    }
+
+    .message {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 10px;
+      background: rgba(0,0,0,0.6);
+      display: none;
+    }
+  </style>
 </head>
 <body>
   <h1>Квест: скрафть торт</h1>
 
   <div class="crafting-area">
-    <!-- 3×3 сетка -->
-    <div class="slots">
-      <div class="slot" data-index="0"></div>
-      <div class="slot" data-index="1"></div>
-      <div class="slot" data-index="2"></div>
-      <div class="slot" data-index="3"></div>
-      <div class="slot" data-index="4"></div>
-      <div class="slot" data-index="5"></div>
-      <div class="slot" data-index="6"></div>
-      <div class="slot" data-index="7"></div>
-      <div class="slot" data-index="8"></div>
-    </div>
+    <!-- 3×3 ячейки -->
+    <div class="slot" data-index="0"></div>
+    <div class="slot" data-index="1"></div>
+    <div class="slot" data-index="2"></div>
+    <div class="slot" data-index="3"></div>
+    <div class="slot" data-index="4"></div>
+    <div class="slot" data-index="5"></div>
+    <div class="slot" data-index="6"></div>
+    <div class="slot" data-index="7"></div>
+    <div class="slot" data-index="8"></div>
 
-    <!-- Ячейка результата -->
+    <!-- ячейка результата -->
     <div class="result-slot"></div>
   </div>
 
-  <!-- Инвентарь снизу -->
+  <!-- инвентарь -->
   <div class="inventory">
     <img src="milk.png" draggable="true" class="item" data-item="milk">
     <img src="sugar.png" draggable="true" class="item" data-item="sugar">
@@ -35,9 +117,54 @@
     <img src="wheat.png" draggable="true" class="item" data-item="wheat">
   </div>
 
-  <!-- Сообщение -->
+  <!-- подсказка -->
   <div class="message"></div>
 
-  <script src="script.js"></script>
+  <script>
+    const slots = document.querySelectorAll(".slot");
+    const resultSlot = document.querySelector(".result-slot");
+    const message = document.querySelector(".message");
+    let placedItems = Array(9).fill(null);
+
+    document.querySelectorAll(".item").forEach(item => {
+      item.addEventListener("dragstart", e => {
+        e.dataTransfer.setData("item", item.dataset.item);
+        e.dataTransfer.setData("img", item.src);
+      });
+    });
+
+    slots.forEach((slot, index) => {
+      slot.addEventListener("dragover", e => e.preventDefault());
+      slot.addEventListener("drop", e => {
+        e.preventDefault();
+        const item = e.dataTransfer.getData("item");
+        const imgSrc = e.dataTransfer.getData("img");
+
+        slot.innerHTML = <img src="${imgSrc}" alt="${item}">;
+        placedItems[index] = item;
+
+        checkRecipe();
+      });
+    });
+
+    function checkRecipe() {
+      const correct = [
+        "milk","milk","milk",
+        "sugar","egg","sugar",
+        "wheat","wheat","wheat"
+      ];
+
+      if (JSON.
+stringify(placedItems) === JSON.stringify(correct)) {
+        resultSlot.innerHTML = <img src="cake.png" alt="cake">;
+        message.style.display = "block";
+        message.innerHTML = `
+          ✅ Ура! Ты скрафтила торт! <br>
+          🎉 Подсказка: следующая тайна ждёт тебя под столом!
+        `;
+      }
+    }
+  </script>
 </body>
 </html>
+
